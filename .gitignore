@@ -10,6 +10,9 @@
 data/raw/
 *.zip
 
+# El archivo de la CNA sí es liviano (555 KB) y se versiona, pero como XML de Excel 2003
+# renombrado a .xls. Ver analisis/acreditacion.py.
+
 # Python
 __pycache__/
 *.py[cod]

@@ -50,9 +50,17 @@ def cargar_base(ruta=None):
     return pd.read_csv(ruta)
 
 
+AMBITOS = {
+    'Pregrado':     lambda d: d.nivel_global == 'Pregrado',
+    'Posgrado':     lambda d: d.nivel_carrera.isin(['Magister', 'Doctorado']),
+    'Especialidad': lambda d: d.nivel_carrera == 'Especialidad Médica U Odontológica',
+}
+# Fuera de alcance por decisión: Diplomado (61.228 alumnos) y Postítulo genérico (3.810).
+
+
 def construir_mercados(df, foco=UNAB, metrica='mat1_total', ambito='region',
-                       universo='Universidades', nivel='Pregrado',
-                       match_jornada=True, match_modalidad=False, umbral=5):
+                       universo='__all', nivel='Pregrado',
+                       match_jornada=True, match_modalidad=False, match_titulo=True, umbral=5):
     """
     Arma los mercados donde `foco` compite y calcula posición y participación.
 
@@ -64,6 +72,12 @@ def construir_mercados(df, foco=UNAB, metrica='mat1_total', ambito='region',
       ambito : 'comuna' | 'provincia' | 'region' | 'pais'
           El denominador. La misma carrera da 54,7% de participación medida por comuna y 8,9%
           medida por región. Ambas son correctas y responden preguntas distintas.
+      match_titulo : bool
+          Exige que las carreras del mercado entreguen el mismo tipo de título. Es lo que separa
+          bien a los IP de las universidades, y mejor que filtrar por tipo de institución: los IP
+          no pueden entregar licenciatura (0 alumnos en toda la base), así que entran solo donde
+          compiten de verdad. Apagarlo mete en el mismo mercado una licenciatura y un técnico de
+          nivel superior, que no son el mismo producto.
       umbral : float
           Brecha máxima, en % del máximo del mercado, para considerar el liderazgo compartido.
           Con 0 solo entran los empates exactos. Es una convención de materialidad declarada,
@@ -74,7 +88,9 @@ def construir_mercados(df, foco=UNAB, metrica='mat1_total', ambito='region',
     d = df.copy()
     if universo != '__all':
         d = d[d.tipo_inst == universo]
-    if nivel != '__all':
+    if nivel in AMBITOS:
+        d = d[AMBITOS[nivel](d)]
+    elif nivel != '__all':
         d = d[d.nivel_global == nivel]
 
     # Con primer año, una carrera sin admitidos no compite por el estudiante de este año.
@@ -86,6 +102,8 @@ def construir_mercados(df, foco=UNAB, metrica='mat1_total', ambito='region',
         llave.append('jornada')
     if match_modalidad:
         llave.append('modalidad')
+    if match_titulo:
+        llave.append('nivel_carrera')
 
     inst = (d.groupby(llave + ['institucion'], observed=True)[metrica].sum()
               .reset_index().rename(columns={metrica: 'val'}))
@@ -158,15 +176,17 @@ def suite(df, foco=UNAB, verbose=True):
     ok('continuidad no reporta primer año',
        df[df.tipo_plan == 'Plan Regular de Continuidad'].reporta_mat1.sum() == 0)
 
+    ok('IP no entregan licenciatura',
+       df[(df.tipo_inst == 'Institutos Profesionales') &
+          (df.nivel_carrera == 'Profesional Con Licenciatura')].mat_total.sum() == 0)
+    ok('especialidades solo en universidades',
+       df[AMBITOS['Especialidad'](df)].tipo_inst.nunique() == 1)
+
     mk = construir_mercados(df, foco=foco, umbral=5)
-    res = resumen_foco(mk, foco)
-    if foco == UNAB:
-        ok('mercados = app.js (128)',            res.mercados.sum() == 128)
-        ok('lidera sola = app.js (25)',          res.loc['Lidera sola', 'mercados'] == 25)
-        ok('liderazgo compartido = app.js (3)',  res.loc['Liderazgo compartido', 'mercados'] == 3)
-        ok('sin competencia = app.js (15)',      res.loc['Sin competencia', 'mercados'] == 15)
     ok('shares suman 100% en cada mercado',
-       np.allclose(mk.groupby(['area_generica', 'geo', 'jornada'], observed=True).share.sum(), 100))
+       np.allclose(mk.groupby([c for c in mk.columns if c in
+                   ('area_generica', 'geo', 'jornada', 'nivel_carrera')],
+                   observed=True).share.sum(), 100))
 
     t = pd.DataFrame(r, columns=['chequeo', 'pasa'])
     if verbose:
