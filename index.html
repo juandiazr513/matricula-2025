@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Competencia por carrera · Matrícula 2025</title>
+<link rel="canonical" href="https://juandiazr513.github.io/matricula-2025/">
+<meta name="description" content="Para cada carrera, quién más la dicta en el mismo territorio y qué participación tiene cada institución. Datos SIES, matrícula 2025.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..800&family=IBM+Plex+Mono:wght@400;500;600&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/app.css">
+</head>
+<body>
+
+<header class="masthead">
+  <p class="eyebrow">SIES · Matrícula 2025 · corte 15 de julio</p>
+  <h1>Competencia<br>por carrera</h1>
+  <p class="thesis">Una carrera no compite contra el sistema completo: compite contra las que se dictan al lado, en la misma jornada. Esta vista arma ese mercado real y mide qué tajada se lleva cada institución.</p>
+</header>
+
+<section class="controls" aria-label="Controles">
+  <div class="ctl ctl--wide">
+    <label for="foco">Institución en foco</label>
+    <select id="foco"></select>
+  </div>
+  <div class="ctl">
+    <label for="ambito">Mercado geográfico</label>
+    <select id="ambito">
+      <option value="comuna">Comuna</option>
+      <option value="provincia">Provincia</option>
+      <option value="region" selected>Región</option>
+      <option value="pais">País</option>
+    </select>
+  </div>
+  <div class="ctl">
+    <label for="universo">Universo</label>
+    <select id="universo">
+      <option value="Universidades" selected>Solo universidades</option>
+      <option value="Institutos Profesionales">Solo IP</option>
+      <option value="Centros de Formación Técnica">Solo CFT</option>
+      <option value="__all">Todas las IES</option>
+    </select>
+  </div>
+  <div class="ctl">
+    <label for="nivel">Nivel</label>
+    <select id="nivel">
+      <option value="Pregrado" selected>Pregrado</option>
+      <option value="Posgrado">Posgrado</option>
+      <option value="Postítulo">Postítulo</option>
+      <option value="__all">Todos</option>
+    </select>
+  </div>
+  <div class="ctl">
+    <label for="metrica">Métrica</label>
+    <select id="metrica">
+      <option value="mat1_total" selected>Matrícula de primer año</option>
+      <option value="mat_total">Matrícula total</option>
+    </select>
+  </div>
+  <div class="ctl ctl--checks">
+    <label>El mercado exige misma</label>
+    <div class="checks">
+      <label class="chk"><input type="checkbox" id="mJornada" checked> jornada</label>
+      <label class="chk"><input type="checkbox" id="mModalidad"> modalidad</label>
+    </div>
+  </div>
+  <div class="ctl ctl--wide">
+    <label for="buscar">Buscar carrera</label>
+    <input type="search" id="buscar" placeholder="p. ej. enfermería" autocomplete="off">
+  </div>
+  <div class="ctl">
+    <label for="orden">Ordenar por</label>
+    <select id="orden">
+      <option value="foco" selected>Tamaño en foco</option>
+      <option value="share">Participación</option>
+      <option value="mkt">Tamaño del mercado</option>
+      <option value="gap">Distancia al líder</option>
+    </select>
+  </div>
+</section>
+
+<section class="summary" id="summary" aria-live="polite"></section>
+
+<main class="board">
+  <div class="panel panel--list">
+    <div class="panel-head">
+      <h2>Mercados</h2>
+      <p class="legend">
+        <span class="key key--foco"></span> foco
+        <span class="key key--leader"></span> líder
+        <span class="key key--other"></span> resto
+      </p>
+    </div>
+    <div id="strips" class="strips" role="list"></div>
+  </div>
+
+  <div class="panel panel--detail">
+    <div id="detail" class="detail"></div>
+  </div>
+</main>
+
+<footer class="foot">
+  <p>Fuente: Servicio de Información de Educación Superior (SIES), Mineduc. Base de matrícula 2025, corte 15-07-2025, procesada a nivel de carrera-sede.</p>
+  <p class="warn">La cobertura TES solo es válida para primer año de pregrado. Los promedios de edad del mercado están ponderados por matrícula.</p>
+</footer>
+
+<div id="loading" class="loading"><span>Cargando 16.089 carreras…</span></div>
+
+<script src="assets/app.js"></script>
+</body>
+</html>
