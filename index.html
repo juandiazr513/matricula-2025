@@ -13,6 +13,11 @@
 </head>
 <body>
 
+<nav class="nav">
+  <a href="index.html" aria-current="page">Competencia por carrera</a>
+  <a href="evolucion.html">Evolución 2015–2025</a>
+</nav>
+
 <header class="masthead">
   <p class="eyebrow">SIES · Matrícula 2025 · corte 15 de julio</p>
   <h1>Competencia<br>por carrera</h1>
@@ -70,6 +75,15 @@
     <input type="search" id="buscar" placeholder="p. ej. enfermería" autocomplete="off">
   </div>
   <div class="ctl">
+    <label for="umbral">Liderazgo compartido si la brecha es</label>
+    <select id="umbral">
+      <option value="0">solo empate exacto</option>
+      <option value="2">≤ 2%</option>
+      <option value="5" selected>≤ 5%</option>
+      <option value="10">≤ 10%</option>
+    </select>
+  </div>
+  <div class="ctl">
     <label for="orden">Ordenar por</label>
     <select id="orden">
       <option value="foco" selected>Tamaño en foco</option>
@@ -88,7 +102,7 @@
       <h2>Mercados</h2>
       <p class="legend">
         <span class="key key--foco"></span> foco
-        <span class="key key--leader"></span> líder
+        <span class="key key--leader"></span> líder o colíder
         <span class="key key--other"></span> resto
       </p>
     </div>
@@ -103,6 +117,7 @@
 <footer class="foot">
   <p>Fuente: Servicio de Información de Educación Superior (SIES), Mineduc. Base de matrícula 2025, corte 15-07-2025, procesada a nivel de carrera-sede.</p>
   <p class="warn">La cobertura TES solo es válida para primer año de pregrado. Los promedios de edad del mercado están ponderados por matrícula.</p>
+  <p class="warn">El umbral de liderazgo compartido es una convención de materialidad, no una prueba estadística: la base es censal y no tiene error muestral. Calibrarlo bien exige la serie histórica, que esta base no trae.</p>
 </footer>
 
 <div id="loading" class="loading"><span>Cargando 16.089 carreras…</span></div>

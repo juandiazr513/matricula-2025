@@ -17,6 +17,7 @@ const state = {
   mJornada:true,
   mModalidad:false,
   orden:'foco',
+  umbral:5,          // brecha máx. (%) para considerar liderazgo compartido
   q:'',
   sel:null
 };
@@ -85,13 +86,25 @@ function build(){
 
   const out=[];
   for(const mk of mkts.values()){
-    const list=[...mk.inst.values()].sort((a,b)=>b.val-a.val);
+    // Desempate alfabético explícito: sin él, el orden de dos instituciones empatadas
+    // dependía del orden de las filas en el CSV y no coincidía con pandas.
+    const list=[...mk.inst.values()].sort((a,b)=> b.val-a.val || a.nombre.localeCompare(b.nombre,'es'));
     const foco = mk.inst.get(state.foco);
     if(!foco) continue;
-    list.forEach((it,i)=>{ it.pos=i+1; it.share=it.val/mk.total*100; });
+
+    // Liderazgo: no es "el primero de la lista", es "quien está a menos del umbral del máximo".
+    // Con umbral 0 solo entran los empates exactos.
+    const corte = list[0].val * (1 - state.umbral/100);
+    list.forEach((it,i)=>{
+      it.pos   = i+1;
+      it.share = it.val/mk.total*100;
+      it.coLider = it.val >= corte;
+    });
     mk.list=list;
     mk.foco=foco;
-    mk.lider=list[0];
+    mk.coLideres = list.filter(it=>it.coLider);
+    mk.compartido = mk.coLideres.length > 1;
+    mk.focoLidera = foco.coLider;
     mk.share=foco.val/mk.total*100;
     mk.gap=list[0].val-foco.val;
     mk.nInst=list.length;
@@ -113,16 +126,17 @@ function arrange(mkts){
     mkt:(x,y)=>y.total-x.total,
     gap:(x,y)=>y.gap-x.gap
   }[state.orden];
-  return [...a].sort(by);
+  return [...a].sort((x,y)=> by(x,y) || x.carrera.localeCompare(y.carrera,'es'));
 }
 
 /* ── render: resumen ────────────────────────────────────────────── */
 function renderSummary(mkts){
   const focoVal = mkts.reduce((s,m)=>s+m.foco.val,0);
   const mktVal  = mkts.reduce((s,m)=>s+m.total,0);
-  const lidera  = mkts.filter(m=>m.foco.pos===1).length;
+  const soloLid = mkts.filter(m=>m.focoLidera && !m.compartido && m.nInst>1).length;
+  const comp    = mkts.filter(m=>m.focoLidera && m.compartido).length;
+  const unico   = mkts.filter(m=>m.nInst===1).length;
   const marginal= mkts.filter(m=>m.share<10 && m.nInst>1).length;
-  const solo    = mkts.filter(m=>m.nInst===1).length;
   const label   = state.metrica==='mat1_total' ? 'primer año' : 'matrícula total';
 
   document.getElementById('summary').innerHTML = `
@@ -130,9 +144,17 @@ function renderSummary(mkts){
     <div class="stat stat--foco"><b>${fmt(focoVal)}</b><span>${label} · foco</span></div>
     <div class="stat"><b>${fmt(mktVal)}</b><span>${label} · mercado</span></div>
     <div class="stat stat--foco"><b>${pct(focoVal/mktVal*100)}</b><span>participación</span></div>
-    <div class="stat"><b>${fmt(lidera)}</b><span>donde lidera</span></div>
-    <div class="stat"><b>${fmt(marginal)}</b><span>bajo 10%</span></div>
-    <div class="stat"><b>${fmt(solo)}</b><span>sin competencia</span></div>`;
+    <div class="stat"><b>${fmt(soloLid)}</b><span>lidera solo</span></div>
+    <div class="stat stat--tie"><b>${fmt(comp)}</b><span>liderazgo compartido</span></div>
+    <div class="stat"><b>${fmt(unico)}</b><span>sin competencia</span></div>
+    <div class="stat"><b>${fmt(marginal)}</b><span>bajo 10%</span></div>`;
+}
+
+/* Cómo se nombra la posición del foco: nunca "1º" a secas si el liderazgo está compartido. */
+function rango(m){
+  if(m.nInst===1) return 'sin competencia';
+  if(m.focoLidera && m.compartido) return `1º compartido · ${m.nInst}`;
+  return `${m.foco.pos}º de ${m.nInst}`;
 }
 
 /* ── render: strips ─────────────────────────────────────────────── */
@@ -145,7 +167,7 @@ function renderStrips(mkts){
   host.innerHTML = mkts.map(m=>{
     const segs = m.list.map(it=>{
       const w=(it.val/m.total*100).toFixed(3);
-      const cls = it.nombre===state.foco ? 'seg--foco' : (it.pos===1 ? 'seg--leader' : 'seg--other');
+      const cls = it.nombre===state.foco ? 'seg--foco' : (it.coLider ? 'seg--leader' : 'seg--other');
       return `<i class="seg ${cls}" style="flex:0 0 ${w}%" title="${it.nombre}: ${fmt(it.val)} (${pct(it.share)})"></i>`;
     }).join('');
     const geo = [m.geo, m.jornada, m.modalidad].filter(Boolean).join(' · ');
@@ -153,7 +175,7 @@ function renderStrips(mkts){
               aria-current="${state.sel===m.key}">
       <span class="strip-top">
         <span class="strip-name">${m.carrera}<span class="strip-geo">${geo} · ${m.nInst} inst.</span></span>
-        <span class="strip-share">${pct(m.share)}<small>${m.foco.pos}º de ${m.nInst}</small></span>
+        <span class="strip-share">${pct(m.share)}<small>${rango(m)}</small></span>
       </span>
       <span class="bar">${segs}</span>
     </button>`;
@@ -174,9 +196,9 @@ function renderDetail(mkts){
   const max=m.list[0].val;
   const label = state.metrica==='mat1_total' ? '1er año' : 'matrícula';
   const rows = m.list.map(it=>{
-    const cls=[it.nombre===state.foco?'is-foco':'', it.pos===1?'is-leader':''].join(' ');
+    const cls=[it.nombre===state.foco?'is-foco':'', it.coLider?'is-leader':''].join(' ');
     return `<tr class="${cls}">
-      <td class="pos">${it.pos}</td>
+      <td class="pos">${it.coLider && m.compartido ? '1=' : it.pos}</td>
       <td>${it.nombre}</td>
       <td class="num">${fmt(it.val)}</td>
       <td class="num">${pct(it.share)}</td>
@@ -200,9 +222,15 @@ function renderDetail(mkts){
   const prow=(t,f,r,fn)=>`<div class="prow"><span>${t}</span><b>${fn(f)}</b><em>${rest.length?fn(r):'—'}</em></div>`;
 
   const geo=[m.geo, m.jornada, m.modalidad].filter(Boolean).join(' · ');
+  const aviso = m.compartido ? `<p class="tie"><b>Liderazgo compartido.</b>
+    ${m.coLideres.map(it=>`${it.nombre} (${fmt(it.val)})`).join(' · ')}.
+    La brecha entre ellas es de ${fmt(m.coLideres[0].val - m.coLideres[m.coLideres.length-1].val)}
+    en ${label}, bajo el umbral de ${state.umbral}%. Ninguna lidera sola.</p>` : '';
+
   host.innerHTML = `
     <h3>${m.carrera}</h3>
     <p class="detail-sub">${geo} · ${m.nInst} institución${m.nInst>1?'es':''} · ${fmt(m.total)} en ${label}</p>
+    ${aviso}
     <table class="rank">
       <thead><tr><th></th><th>Institución</th><th>${label}</th><th>Part.</th><th></th></tr></thead>
       <tbody>${rows}</tbody>
@@ -231,6 +259,7 @@ function bind(){
     document.getElementById(id).addEventListener(ev,e=>{ state[prop]=get(e); state.sel=null; render(); });
   };
   on('foco','foco'); on('ambito','ambito'); on('universo','universo');
+  on('umbral','umbral','change',e=>+e.target.value);
   on('nivel','nivel'); on('metrica','metrica'); on('orden','orden');
   on('mJornada','mJornada','change',e=>e.target.checked);
   on('mModalidad','mModalidad','change',e=>e.target.checked);

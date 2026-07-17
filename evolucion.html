@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Evolución 2015-2025 · Matrícula SIES</title>
+<meta name="description" content="Cómo se movió la matrícula de educación superior chilena entre 2015 y 2025, y de dónde viene el crecimiento de cada institución.">
+<link rel="canonical" href="https://juandiazr513.github.io/matricula-2025/evolucion.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..800&family=IBM+Plex+Mono:wght@400;500;600&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/app.css">
+</head>
+<body>
+
+<nav class="nav">
+  <a href="index.html">Competencia por carrera</a>
+  <a href="evolucion.html" aria-current="page">Evolución 2015–2025</a>
+</nav>
+
+<header class="masthead">
+  <p class="eyebrow">SIES · Serie 2015–2025 · corte 15 de julio de 2025</p>
+  <h1>Evolución</h1>
+  <p class="thesis">Crecer con el mercado no es lo mismo que ganarle al mercado. La primera parte muestra cómo se movió la matrícula; la segunda separa cuánto del cambio de una institución vino porque el mercado creció y cuánto porque ganó participación.</p>
+</header>
+
+<section class="controls" aria-label="Controles">
+  <div class="ctl ctl--wide">
+    <label for="foco">Ver</label>
+    <select id="foco"></select>
+  </div>
+  <div class="ctl">
+    <label for="corte">Desglosar por</label>
+    <select id="corte">
+      <option value="modalidad" selected>Modalidad</option>
+      <option value="tipo_plan">Tipo de plan</option>
+      <option value="jornada">Jornada</option>
+      <option value="cine_area">Área CINE-F 2013</option>
+      <option value="area">Área del conocimiento</option>
+      <option value="region">Región</option>
+      <option value="nivel_global">Nivel</option>
+      <option value="tipo_inst">Tipo de institución</option>
+    </select>
+  </div>
+  <div class="ctl">
+    <label for="nivel">Nivel</label>
+    <select id="nivel">
+      <option value="Pregrado" selected>Pregrado</option>
+      <option value="Posgrado">Posgrado</option>
+      <option value="Postítulo">Postítulo</option>
+      <option value="__all">Todos</option>
+    </select>
+  </div>
+  <div class="ctl">
+    <label for="universo">Universo</label>
+    <select id="universo">
+      <option value="__all" selected>Todas las IES</option>
+      <option value="Universidades">Solo universidades</option>
+      <option value="Institutos Profesionales">Solo IP</option>
+      <option value="Centros de Formación Técnica">Solo CFT</option>
+    </select>
+  </div>
+  <div class="ctl">
+    <label for="modalidad">Filtrar modalidad</label>
+    <select id="modalidad">
+      <option value="__all" selected>Todas</option>
+      <option value="Presencial">Presencial</option>
+      <option value="No Presencial">No Presencial</option>
+      <option value="Semipresencial">Semipresencial</option>
+    </select>
+  </div>
+  <div class="ctl">
+    <label for="metrica">Métrica</label>
+    <select id="metrica">
+      <option value="mat_total" selected>Matrícula total</option>
+      <option value="mat1_total">Matrícula de primer año</option>
+    </select>
+  </div>
+  <div class="ctl">
+    <label for="escala">Escala</label>
+    <select id="escala">
+      <option value="abs" selected>Absoluta</option>
+      <option value="idx">Índice base 100</option>
+      <option value="pct">% del total</option>
+    </select>
+  </div>
+</section>
+
+<section class="summary" id="summary" aria-live="polite"></section>
+
+<main class="board board--full">
+  <div class="panel">
+    <div class="panel-head">
+      <h2 id="titulo-serie">Serie anual</h2>
+      <p class="legend" id="aviso-mat1"></p>
+    </div>
+    <div id="chart" class="chart"></div>
+    <div id="tabla" class="tabla-wrap"></div>
+  </div>
+</main>
+
+<section class="shift">
+  <div class="shift-head">
+    <h2>De dónde viene el cambio</h2>
+    <div class="shift-ctl">
+      <label for="anio0">Desde</label>
+      <select id="anio0"></select>
+      <label for="anio1">Hasta</label>
+      <select id="anio1"></select>
+    </div>
+  </div>
+  <p class="shift-intro">Descomposición shift-share de la matrícula de la institución en foco, sobre mercados definidos por área genérica + región + jornada. Solo aplica a una institución concreta, no al sistema completo.</p>
+  <div id="shift" class="shift-body"></div>
+</section>
+
+<footer class="foot">
+  <p>Fuente: Servicio de Información de Educación Superior (SIES), Mineduc. Serie 2015–2025, corte 15-07-2025, agregada por año, institución, área genérica, región, jornada, modalidad, tipo de plan y nivel.</p>
+  <p class="warn"><b>El denominador se mueve.</b> El sistema pasó de 156 instituciones en 2015 a 122 en 2025. Si un competidor cierra, la participación de los demás sube sin que hagan nada, y esta descomposición lo registra como "efecto participación" sin poder distinguirlo de una ganancia real.</p>
+  <p class="warn">Los Planes de Continuidad no reportan matrícula de primer año: con esa métrica desaparecen, pese a tener 65.693 alumnos. Para ellos usa matrícula total.</p>
+  <p>La serie parte en 2015 porque ahí nace el Plan Regular de Continuidad, hoy un quinto del pregrado online. Antes de 2011 la modalidad no existe como columna y hay que reconstruirla desde la jornada.</p>
+</footer>
+
+<div id="loading" class="loading"><span>Cargando la serie 2015–2025…</span></div>
+
+<script src="assets/evolucion.js"></script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+# Archivos crudos del SIES. NO van al repo.
+#
+# El histórico (Matricula_2007_2025_WEB_*.csv) pesa 139 MB y GitHub rechaza sobre 100 MB.
+# Además no hace falta: es el insumo, no el producto. etl/prep_serie.py lo lee desde data/raw/
+# y genera data/serie_2015_2025.csv (20,8 MB), que sí va versionado.
+#
+# Para regenerar: baja los archivos del SIES a data/raw/ y corre
+#   python etl/prep.py         → data/matricula2025.csv
+#   python etl/prep_serie.py   → data/serie_2015_2025.csv
+data/raw/
+*.zip
+
+# Python
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.venv/
+venv/
+
+# Sistema
+.DS_Store
+Thumbs.db
